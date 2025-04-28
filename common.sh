@@ -236,9 +236,10 @@ fi
 
 ZZZ_PATH="$(find "$HOME_PATH/package" -name "*-default-settings" -not -path "A/exclude_dir/*" -print)"
 export ZZZ_PATH="${ZZZ_PATH}"
-export LUCI_EDITION="$(grep -oP "DISTRIB_REVISION='\K[^']+" ${ZZZ_PATH})"
 if [[ -n "${ZZZ_PATH}" ]]; then
   echo "ZZZ_PATH=${ZZZ_PATH}" >> ${GITHUB_ENV}
+  export LUCI_EDITION="$(grep -oP "DISTRIB_REVISION='\K[^']+" ${ZZZ_PATH})"
+  echo "LUCI_EDITION=${LUCI_EDITION}" >> ${GITHUB_ENV}
   sed -i '/exit 0$/d' "${ZZZ_PATH}"
   sed -i "s?main.lang=.*?main.lang='zh_cn'?g" "${ZZZ_PATH}"
   grep -q "openwrt_banner" "${ZZZ_PATH}" && sed -i '/openwrt_banner/d' "${ZZZ_PATH}"
