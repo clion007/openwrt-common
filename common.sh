@@ -25,9 +25,7 @@ COOLSNOWWOLF)
   export REPO_URL="https://github.com/coolsnowwolf/lede"
   export SOURCE="Lede"
   export SOURCE_OWNER="Lean"
-  ZZZ_PATH="$(find "$HOME_PATH/package" -name "*-default-settings" -not -path "A/exclude_dir/*" -print)"
-  export ZZZ_PATH="${ZZZ_PATH}"
-  export LUCI_EDITION="$(grep -oP "DISTRIB_REVISION='\K[^']+" ${ZZZ_PATH})"
+  export LUCI_EDITION="23.05"
   export DISTRIB_SOURCECODE="lede"
   export GENE_PATH="${HOME_PATH}/package/base-files/luci2/bin/config_generate"
 ;;
@@ -236,6 +234,9 @@ if ! grep -q "default-settings" "${HOME_PATH}/include/target.mk"; then
   sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings luci ?g' "${HOME_PATH}/include/target.mk"
 fi
 
+ZZZ_PATH="$(find "$HOME_PATH/package" -name "*-default-settings" -not -path "A/exclude_dir/*" -print)"
+export ZZZ_PATH="${ZZZ_PATH}"
+export LUCI_EDITION="$(grep -oP "DISTRIB_REVISION='\K[^']+" ${ZZZ_PATH})"
 if [[ -n "${ZZZ_PATH}" ]]; then
   echo "ZZZ_PATH=${ZZZ_PATH}" >> ${GITHUB_ENV}
   sed -i '/exit 0$/d' "${ZZZ_PATH}"
