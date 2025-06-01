@@ -150,8 +150,8 @@ if ! curl -fsSL "${RAW_WEB}" -o "${LICENSES_DOC}/feeds.conf.default"; then
 fi
 # 增加一些应用
 echo '#!/bin/sh' > "${DELETE}" && chmod +x "${DELETE}"
-if [[ -d "/tmp/common/auto-scripts" ]]; then
-  cp -Rf "/tmp/common/auto-scripts" "${HOME_PATH}/package/auto-scripts"
+if [[ -d "$LINSHI_COMMON/auto-scripts" ]]; then
+  cp -Rf "$LINSHI_COMMON/auto-scripts" "${HOME_PATH}/package/auto-scripts"
 else
   TIME r "缺少auto-scripts文件"
   exit 1
