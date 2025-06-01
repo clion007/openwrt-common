@@ -143,7 +143,7 @@ fi
 function Diy_checkout() {
 # 下载源码后，进行源码微调和增加插件源
 TIME y "正在执行：下载和整理应用,请耐心等候..."
-cd ${HOME_PATH}More actions
+cd ${HOME_PATH}
 [[ ! -d "${LICENSES_DOC}" ]] && mkdir -p "${LICENSES_DOC}"
 if ! curl -fsSL "${RAW_WEB}" -o "${LICENSES_DOC}/feeds.conf.default"; then
   wget -q ${RAW_WEB} -O ${LICENSES_DOC}/feeds.conf.default
