@@ -149,10 +149,12 @@ if ! curl -fsSL "${RAW_WEB}" -o "${LICENSES_DOC}/feeds.conf.default"; then
   wget -q ${RAW_WEB} -O ${LICENSES_DOC}/feeds.conf.default
 fi
 # 增加一些应用
-echo '#!/bin/sh' > "${DELETE}" && sudo chmod +x "${DELETE}"
-gitsvn https://github.com/281677160/common/tree/main/auto-scripts ${HOME_PATH}/package/auto-scripts
-if ! grep -q "auto-scripts" "${HOME_PATH}/Config.in"; then
-  echo 'source "package/auto-scripts/Config.in"' >> ${HOME_PATH}/Config.in
+echo '#!/bin/sh' > "${DELETE}" && chmod +x "${DELETE}"
+if [[ -d "${LINSHI_COMMON}/auto-scripts" ]]; then
+  cp -Rf "$LINSHI_COMMON/auto-scripts" "${HOME_PATH}/package/auto-scripts"
+else
+  TIME r "缺少auto-scripts文件"
+  exit 1
 fi
 
 sed -i "s/ZHUJI_MING/${SOURCE}/g" "${DEFAULT_PATH}"
