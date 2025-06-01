@@ -143,10 +143,15 @@ fi
 function Diy_checkout() {
 # 下载源码后，进行源码微调和增加插件源
 TIME y "正在执行：下载和整理应用,请耐心等候..."
+cd ${HOME_PATH}More actions
+[[ ! -d "${LICENSES_DOC}" ]] && mkdir -p "${LICENSES_DOC}"
+if ! curl -fsSL "${RAW_WEB}" -o "${LICENSES_DOC}/feeds.conf.default"; then
+  wget -q ${RAW_WEB} -O ${LICENSES_DOC}/feeds.conf.default
+fi
 # 增加一些应用
 echo '#!/bin/sh' > "${DELETE}" && chmod +x "${DELETE}"
-if [[ -d "${LINSHI_COMMON}/auto-scripts" ]]; then
-  cp -Rf "$LINSHI_COMMON/auto-scripts" "${HOME_PATH}/package/auto-scripts"
+if [[ -d "/tmp/common/auto-scripts" ]]; then
+  cp -Rf "/tmp/common/auto-scripts" "${HOME_PATH}/package/auto-scripts"
 else
   TIME r "缺少auto-scripts文件"
   exit 1
