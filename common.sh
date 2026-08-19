@@ -3,6 +3,13 @@
 # common Module by 28677160
 # matrix.target=${FOLDER_NAME}
 
+# Locate the framework repo: CI clones it to /tmp/common (LINSHI_COMMON);
+# for local builds, fall back to this script's own directory.
+if [[ -z "${LINSHI_COMMON}" ]]; then
+  LINSHI_COMMON="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  export LINSHI_COMMON
+fi
+
 ACTIONS_VERSION="2.3.0"
 Compte=$(date +%Y年%m月%d号%H时%M分)
 function TIME() {
@@ -203,7 +210,7 @@ fi
 
 # 增加中文语言包
 if [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" ]] && [[ "${THEME_BRANCH}" == "Theme2" ]]; then
-  gitsvn https://github.com/clion007/openwrt-common/tree/main/Share/default-settings ${HOME_PATH}/package/default-settings
+  cp -Rf ${LINSHI_COMMON}/Share/default-settings ${HOME_PATH}/package/default-settings
   if grep -q "libustream-wolfssl" "${HOME_PATH}/include/target.mk"; then
     sed -i 's?libustream-wolfssl?libustream-openssl?g' "${HOME_PATH}/include/target.mk"
   fi
@@ -217,7 +224,7 @@ if [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" 
     sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings luci luci-compat luci-lib-base luci-lib-ipkg ?g' "${HOME_PATH}/include/target.mk"
   fi
 elif [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" ]] && [[ "${THEME_BRANCH}" == "Theme1" ]]; then
-  gitsvn https://github.com/clion007/openwrt-common/tree/main/Share/default-setting ${HOME_PATH}/package/default-settings
+  cp -Rf ${LINSHI_COMMON}/Share/default-setting ${HOME_PATH}/package/default-settings
   if grep -q "libustream-wolfssl" "${HOME_PATH}/include/target.mk"; then
     sed -i 's?libustream-wolfssl?libustream-openssl?g' "${HOME_PATH}/include/target.mk"
   fi
@@ -303,14 +310,15 @@ if [[ -d "${HOME_PATH}/feeds/danshui/relevance/nas-packages/multimedia/ffmpeg-re
 fi
 
 # tproxy补丁
-bash <(curl -fsSL https://github.com/clion007/openwrt-common/raw/main/Share/tproxy/nft_tproxy.sh)
+bash ${LINSHI_COMMON}/Share/tproxy/nft_tproxy.sh
 
 if [[ ! -d "${HOME_PATH}/feeds/packages/lang/rust" ]]; then
     gitsvn https://github.com/openwrt/packages/tree/openwrt-23.05/lang/rust ${HOME_PATH}/feeds/packages/lang/rust
 fi
 
 if [[ ! -d "${HOME_PATH}/feeds/packages/devel/packr" ]]; then
-  gitsvn https://github.com/clion007/openwrt-common/tree/main/Share/packr ${HOME_PATH}/feeds/packages/devel/packr
+  mkdir -p ${HOME_PATH}/feeds/packages/devel
+  cp -Rf ${LINSHI_COMMON}/Share/packr ${HOME_PATH}/feeds/packages/devel/packr
 fi
 
 # files大法，设置固件无烦恼
@@ -417,7 +425,8 @@ if [[ "${REPO_BRANCH}" == "openwrt-19.07" ]]; then
   rm -fr ${HOME_PATH}/feeds/danshui/luci-app-kodexplorer
 fi
 if [[ "${REPO_BRANCH}" =~ (main|master|openwrt-24.10) ]]; then
-  gitsvn https://github.com/clion007/openwrt-common/blob/main/Share/luci-app-nginx-pingos/Makefile ${HOME_PATH}/feeds/danshui/luci-app-nginx-pingos/Makefile
+  mkdir -p ${HOME_PATH}/feeds/danshui/luci-app-nginx-pingos
+  cp -f ${LINSHI_COMMON}/Share/luci-app-nginx-pingos/Makefile ${HOME_PATH}/feeds/danshui/luci-app-nginx-pingos/Makefile
 fi
 if [[ "${REPO_BRANCH}" == *"23.05"* ]]; then
   gitsvn https://github.com/coolsnowwolf/packages/tree/152022403f0ab2a85063ae1cd9687bd5240fe9b7/net/dnsproxy ${HOME_PATH}/feeds/packages/net/dnsproxy
@@ -515,7 +524,7 @@ fi
 
 # 正在执行插件语言修改
 if [[ ! -d "${HOME_PATH}/feeds/luci/modules/luci-mod-system" ]]; then
-  bash <(curl -fsSL https://raw.githubusercontent.com/clion007/openwrt-common/main/language/zh-cn.sh)
+  bash ${LINSHI_COMMON}/language/zh-cn.sh
 fi
 # files文件夹删除LICENSE,README
 [[ -d "${HOME_PATH}/files" ]] && sudo chmod +x ${HOME_PATH}/files
@@ -755,7 +764,9 @@ CONFIG_PACKAGE_kmod-fs-vfat=y
 CONFIG_PACKAGE_kmod-fuse=y
 # CONFIG_PACKAGE_kmod-fs-ntfs is not set
 ' >> ${HOME_PATH}/.config
-gitsvn https://github.com/clion007/openwrt-common/blob/main/Share/block/10-mount ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
+mkdir -p ${HOME_PATH}/files/etc/hotplug.d/block
+cp -f ${LINSHI_COMMON}/Share/block/10-mount ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
+chmod +x ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
   if [[ "${SOURCE}" == "Lienol" ]] && [[ "${REPO_BRANCH}" == "19.07" ]]; then
     sed -i '/CONFIG_PACKAGE_ntfs-3g=y/d' "${HOME_PATH}/.config"
     sed -i '/CONFIG_PACKAGE_NTFS-3G_HAS_PROBE=y/d' "${HOME_PATH}/.config"

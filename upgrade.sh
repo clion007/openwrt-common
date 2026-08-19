@@ -26,9 +26,7 @@ function Diy_Part2() {
 	export Release_download1="${GITHUB_LINK}/releases/download/${UPDATE_TAG}"
 	export Release_download2="https://ghfast.top/${GITHUB_LINK}/releases/download/${UPDATE_TAG}"
 	export Github_Release="${GITHUB_LINK}/releases/tag/${UPDATE_TAG}"
-        if ! curl -fsSL https://raw.githubusercontent.com/clion007/openwrt-common/main/autoupdate/replace -o replace; then
-		wget -q https://raw.githubusercontent.com/clion007/openwrt-common/main/autoupdate/replace -O replace
-  	fi
+        cp -f ${LINSHI_COMMON}/autoupdate/replace replace
 	if [[ "${TARGET_PROFILE}" == *"k3"* ]]; then
 		export TARGET_PROFILE_ER="phicomm-k3"
 	elif [[ "${TARGET_PROFILE}" == *"k2p"* ]]; then
