@@ -4,8 +4,16 @@ PWD_DIR="$(pwd)"
 
 function install_mustrelyon(){
 echo -e "\033[36m开始升级ubuntu插件和安装依赖.....\033[0m"
+# Configure apt: force IPv4 and short timeouts to avoid hangs on GitHub runners
+cat > /etc/apt/apt.conf.d/99ci-timeout <<'EOF'
+Acquire::ForceIPv4 "true";
+Acquire::Retries "0";
+Acquire::http::Timeout "10";
+Acquire::https::Timeout "10";
+Acquire::http::ConnectionTimeout "10";
+EOF
 # 更新ubuntu源
-apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -y
+apt-get update -y
 
 # 升级ubuntu
 apt-get full-upgrade -y
@@ -55,7 +63,7 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 apt-get install -y nodejs
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/yarnkey.gpg
 echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -y && apt-get install -y yarn gh
+apt-get update -y && apt-get install -y yarn gh
 
 cd $TMP_DIR
 # 安装UPX
