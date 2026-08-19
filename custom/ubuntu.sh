@@ -5,7 +5,7 @@ PWD_DIR="$(pwd)"
 function install_mustrelyon(){
 echo -e "\033[36m开始升级ubuntu插件和安装依赖.....\033[0m"
 # 更新ubuntu源
-apt-get update -y
+apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -y
 
 # 升级ubuntu
 apt-get full-upgrade -y
@@ -15,9 +15,9 @@ apt-get install -y ecj fastjar file gettext java-propose-classpath time xsltproc
 apt-get install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
 bzip2 ccache cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
 genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
-libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
+libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libpython3-dev \
 libreadline-dev libssl-dev libtool llvm lrzsz msmtp ninja-build p7zip p7zip-full patch pkgconf \
-python2 python3 python3-pip python3-cryptography python3-docutils python3-ply python3-pyelftools python3-requests
+python3 python3-pip python3-cryptography python3-docutils python3-ply python3-pyelftools python3-requests
 python3-setuptools python3-distutils qemu-utils rsync scons squashfs-tools subversion swig \
 texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
 
@@ -26,22 +26,20 @@ apt-get install -y libfuse-dev
 
 # N1打包需要的依赖
 apt-get install -y rename pigz clang gnupg
-apt-get install -y $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+apt-get install -y zlib1g-dev quilt libparse-yapp-perl
 
 # 修改21.02编译gn失败
 pip install mistune --upgrade
 pip install -U --force-reinstall scipy
 
-# 安装gcc g++
+# 安装gcc g++（Ubuntu 24.04默认即为gcc-13，无需额外PPA）
 GCC_VERSION="13"
-add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-apt-get update -y
- apt-get install -y gcc-${GCC_VERSION}
- apt-get install -y g++-${GCC_VERSION}
+apt-get install -y gcc-${GCC_VERSION}
+apt-get install -y g++-${GCC_VERSION}
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 60
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} 60
-update-alternatives --config gcc
-update-alternatives --config g++
+update-alternatives --auto gcc
+update-alternatives --auto g++
 
 cd $TMP_DIR
 # 安装golang
@@ -57,7 +55,7 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 apt-get install -y nodejs
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/yarnkey.gpg
 echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-apt-get update -y && apt-get install -y yarn gh
+apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -y && apt-get install -y yarn gh
 
 cd $TMP_DIR
 # 安装UPX
@@ -108,7 +106,6 @@ function update_apt_source(){
 apt-get autoremove -y --purge
 apt-get clean -y
 
-python2.7 --version
 python3 --version
 node -v
 yarn -v
