@@ -59,6 +59,7 @@ else
   exit 1
 fi
 
+echo "LINSHI_COMMON=${LINSHI_COMMON}" >> ${GITHUB_ENV}
 echo "DIY_PT1_SH=${DIY_PT1_SH}" >> ${GITHUB_ENV}
 echo "DIY_PT2_SH=${DIY_PT2_SH}" >> ${GITHUB_ENV}
 echo "COMMON_SH=${COMMON_SH}" >> ${GITHUB_ENV}
