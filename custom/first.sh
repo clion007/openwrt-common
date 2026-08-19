@@ -45,9 +45,8 @@ fi
 function Diy_three() {
 LINSHI_COMMON="/tmp/common"
 rm -rf ${LINSHI_COMMON}
-mkdir -p ${LINSHI_COMMON}
-curl -fsSL https://raw.githubusercontent.com/clion007/openwrt-common/main/common.sh -o ${LINSHI_COMMON}/common.sh
-curl -fsSL https://raw.githubusercontent.com/clion007/openwrt-common/main/upgrade.sh -o ${LINSHI_COMMON}/upgrade.sh
+# Clone the whole framework repo so that common.sh, upgrade.sh and auto-scripts are all available under LINSHI_COMMON
+git clone --depth 1 https://github.com/clion007/openwrt-common.git ${LINSHI_COMMON}
 export COMMON_SH="${LINSHI_COMMON}/common.sh"
 export UPGRADE_SH="${LINSHI_COMMON}/upgrade.sh"
 export CONFIG_TXT="${LINSHI_COMMON}/config.txt"
