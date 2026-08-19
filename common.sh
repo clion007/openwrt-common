@@ -251,7 +251,7 @@ fi
 # 更新feeds
 cd ${HOME_PATH}
 ./scripts/feeds clean
-./scripts/feeds update -a > /dev/null 2>&1
+./scripts/feeds update -a -j 8
 
 
 # 更新feeds后再次修改补充
@@ -436,7 +436,7 @@ TIME y "正在执行：自定义文件"
 cd ${HOME_PATH}
 # 运行自定义文件
 ${DIY_PT1_SH}
-./scripts/feeds update -a
+./scripts/feeds update -a -j 8
 }
 
 
@@ -461,7 +461,6 @@ if [[ ! "${Default_theme}" == "0" ]] && [[ -n "${Default_theme}" ]]; then
 fi
 
 # 更新和安装feeds
-./scripts/feeds install -a > /dev/null 2>&1
 ./scripts/feeds install -a
 
 # 使用自定义配置文件
