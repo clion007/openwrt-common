@@ -60,3 +60,16 @@ do
 	lmo_new_file="$(echo -e "$b"|sed "s/zh_Hans/zh-cn/g")"
 	[[ -f "$b" ]] && mv "$b" "${lmo_new_file}" 2>"/dev/null"
 done
+
+# Add router hostname as dnsmasq host-records (bare name + LAN domain) so LAN clients can resolve via DNS
+hn="$(uci -q get system.@system[0].hostname)"
+lip="$(uci -q get network.lan.ipaddr)"
+if [[ -n "${hn}" ]] && [[ -n "${lip}" ]]; then
+	uci -q add dhcp domain
+	uci -q set dhcp.@domain[-1].name="${hn}"
+	uci -q set dhcp.@domain[-1].ip="${lip}"
+	uci -q add dhcp domain
+	uci -q set dhcp.@domain[-1].name="${hn}.lan"
+	uci -q set dhcp.@domain[-1].ip="${lip}"
+	uci commit dhcp
+fi

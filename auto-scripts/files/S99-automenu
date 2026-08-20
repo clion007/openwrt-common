@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=
+
+start() {
+    # Auto-popup the settings menu after network is ready
+    (
+        # Wait for br-lan to have an IP address (network ready)
+        while ! ip addr show br-lan 2>/dev/null | grep -q "inet "; do
+            sleep 1
+        done
+        sleep 2
+
+        # Clear screen and show a brief message
+        clear
+        echo ""
+        echo "  System ready, launching setup menu..."
+        echo ""
+        sleep 1
+
+        # Run the settings menu
+        /usr/bin/openwrt
+    ) &
+}

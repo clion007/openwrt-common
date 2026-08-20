@@ -16,8 +16,9 @@ endef
 define Package/auto-scripts/description
   Embeds scripts into firmware:
   1. /etc/uci-defaults/99-first-run (runs once on first boot)
-  2. /usr/bin/openwrt (runs openwrt)
-  3. /etc/networkdetection (network anomaly auto-restart, disabled by default)
+  2. /etc/init.d/S99-automenu (auto-popup setup menu after network ready)
+  3. /usr/bin/openwrt (runs openwrt)
+  4. /etc/networkdetection (network anomaly auto-restart, disabled by default)
 endef
 
 define Build/Configure
@@ -29,6 +30,10 @@ endef
 define Package/auto-scripts/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/99-first-run $(1)/etc/uci-defaults/99-first-run
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/S99-automenu $(1)/etc/init.d/S99-automenu
+	$(INSTALL_DIR) $(1)/etc/rc.d
+	ln -s ../init.d/S99-automenu $(1)/etc/rc.d/S99-automenu
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/openwrt $(1)/usr/bin/openwrt
 	$(INSTALL_DIR) $(1)/etc
