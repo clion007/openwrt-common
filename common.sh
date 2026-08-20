@@ -34,7 +34,7 @@ COOLSNOWWOLF)
   export SOURCE_OWNER="Lean"
   export LUCI_EDITION="23.05"
   export DISTRIB_SOURCECODE="lede"
-  export GENE_PATH="${HOME_PATH}/package/base-files/luci2/bin/config_generate"
+  export GENE_PATH="${HOME_PATH}/package/base-files/files/bin/config_generate"
 ;;
 LIENOL)
   export REPO_URL="https://github.com/Lienol/openwrt"
