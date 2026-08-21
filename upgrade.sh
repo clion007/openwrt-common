@@ -77,7 +77,7 @@ function Diy_Part2() {
 	;;
 	esac
 	
-	if [[ -f "${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate" ]]; then
+	if [ -f "${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate" ]; then
 		export AutoUpdate_Version=$(grep -Eo "Version=V[0-9.]+" "${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate" |grep -Eo [0-9.]+)
 	fi
 	
@@ -85,7 +85,7 @@ function Diy_Part2() {
 	export LOCAL_FIRMW="${LUCI_EDITION}-${SOURCE}"
 	export CLOUD_CHAZHAO="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}"
 	
-	if [[ "${TARGET_BOARD}" == "x86" ]]; then
+	if [ "${TARGET_BOARD}" = "x86" ]; then
 		echo "AutoBuild_Uefi=${AutoBuild_Uefi}" >> ${GITHUB_ENV}
 		echo "AutoBuild_Legacy=${AutoBuild_Legacy}" >> ${GITHUB_ENV}
 	else

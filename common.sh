@@ -301,6 +301,16 @@ fi
 gitsvn https://github.com/sbwml/packages_lang_golang ${HOME_PATH}/feeds/packages/lang/golang
 gitsvn https://github.com/sbwml/feeds_packages_lang_node-prebuilt ${HOME_PATH}/feeds/packages/lang/node
 
+# PassWall core components: override stale coolsnowwolf/packages versions with official active builds
+# (resolves xray-core/sing-box/chinadns-ng etc. being outdated in the LEDE packages fork)
+PWPKG="https://github.com/Openwrt-Passwall/openwrt-passwall-packages/tree/main"
+for pw in xray-core sing-box chinadns-ng ipt2socks geoview microsocks dns2socks tcping; do
+  if [ -d "${HOME_PATH}/feeds/packages/net/${pw}" ]; then
+    rm -rf "${HOME_PATH}/feeds/packages/net/${pw}"
+    gitsvn "${PWPKG}/${pw}" "${HOME_PATH}/feeds/packages/net/${pw}"
+  fi
+done
+
 # store插件依赖
 if [[ -d "${HOME_PATH}/feeds/danshui/relevance/nas-packages/network/services" ]] && [[ ! -d "${HOME_PATH}//package/network/services/ddnsto" ]]; then
   mv ${HOME_PATH}/feeds/danshui/relevance/nas-packages/network/services/* ${HOME_PATH}/package/network/services
@@ -691,12 +701,7 @@ else
    echo "不进行,去掉桥接设"
 fi
 
-if [[ "${Ttyd_account_free_login}" == "1" ]]; then
-   sed -i "$lan\set ttyd.@ttyd[0].command='/bin/login -f root'" "${GENE_PATH}"
-   echo "TTYD免账户登录完成"
-else
-   echo "不进行,TTYD免账户登录"
-fi
+# TTYD auto-login is now handled at runtime in 99-first-run (config_generate has no ttyd section)
 
 if [[ "${Password_free_login}" == "1" ]]; then
    sed -i '/CYXluq4wUazHjmCDBCqXF/d' "${ZZZ_PATH}"

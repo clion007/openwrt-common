@@ -11,38 +11,38 @@ RedBG="\033[41;37m"
 OK="${Green}[OK]${Font}"
 ERROR="${Red}[ERROR]${Font}"
 
-function ECHOY() {
+ECHOY() {
   echo
   echo -e "${Yellow} $1 ${Font}"
   echo
 }
-function ECHOR() {
+ECHOR() {
   echo -e "${Red} $1 ${Font}"
 }
-function ECHOB() {
+ECHOB() {
   echo
   echo -e "${Blue} $1 ${Font}"
   echo
 }
-function ECHOYY() {
+ECHOYY() {
   echo -e "${Yellow} $1 ${Font}"
 }
-function ECHOG() {
+ECHOG() {
   echo
   echo -e "${Green} $1 ${Font}"
 }
-function print_ok() {
+print_ok() {
   echo
   echo -e " ${OK} ${Blue} $1 ${Font}"
   echo
 }
-function print_error() {
+print_error() {
   echo
   echo -e "${ERROR} ${RedBG} $1 ${Font}"
   echo
 }
 judge() {
-  if [[ 0 -eq $? ]]; then
+  if [ 0 -eq $? ]; then
     print_ok "$1 完成,正在为您重启系统"
     reboot -f
   else
@@ -51,14 +51,14 @@ judge() {
   fi
 }
 
-function xiugai_ip() {
+xiugai_ip() {
   echo
   export YUMING="请输入您想要更改成的后台IP(tian xie ni de IP)"
   echo
   while :; do
   domainy=""
   read -p " ${YUMING}：" domain
-  if [[ -n "${domain}" ]] && [[ "$(echo ${domain} |grep -Eoc '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')" == '1' ]]; then
+  if [ -n "${domain}" ] && [ "$(echo ${domain} |grep -Eoc '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')" = '1' ]; then
     domainy="Y"
   fi
   case $domainy in
@@ -68,7 +68,7 @@ function xiugai_ip() {
     uci commit network
     ECHOG "您的IP为：${domain}"
     ECHOY "正在为您清空密码"
-    [[ `grep -c "admin" /etc/shadow` -eq '1' ]] && passwd -d admin
+    [ "$(grep -c "admin" /etc/shadow)" -eq '1' ] && passwd -d admin
     passwd -d root
     judge
   break
@@ -80,12 +80,12 @@ function xiugai_ip() {
   done
 }
 
-function qingkong_mima() {
+qingkong_mima() {
 while :; do
 read -p "否清空密码(shi fou qing kong mi ma)[Y/n]：" YN
 case ${YN} in
 [Yy])
-    [[ `grep -c "admin" /etc/shadow` -eq '1' ]] && passwd -d admin
+    [ "$(grep -c "admin" /etc/shadow)" -eq '1' ] && passwd -d admin
     passwd -d root
     judge
 break
@@ -102,7 +102,7 @@ esac
 done
 }
 
-function re_boot() {
+re_boot() {
 echo
 while :; do
 read -p "是否重启系统(shi fou chong qi xi tong)[Y/n]：" YN
@@ -125,7 +125,7 @@ esac
 done
 }
 
-function first_boot() {
+first_boot() {
   echo
   echo
   ECHOR "是否恢复出厂设置?按[Y/y]执行,按[N/n]退出"
@@ -222,7 +222,7 @@ menu() {
     done
 }
 
-if [[ -f '/usr/bin/replace' ]]; then
+if [ -f '/usr/bin/replace' ]; then
   menu "$@"
 else
   menu2 "$@"
