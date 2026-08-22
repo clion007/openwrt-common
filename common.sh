@@ -263,6 +263,14 @@ cd ${HOME_PATH}
 
 # 更新feeds后再次修改补充
 cd ${HOME_PATH}
+
+# 开机直接进入控制台(login shell),不要求按回车:askconsole -> respawn
+INITTAB_PATH="${HOME_PATH}/package/base-files/files/etc/inittab"
+if [ -f "${INITTAB_PATH}" ]; then
+  sed -i 's/::askconsole:/::respawn:/g' "${INITTAB_PATH}"
+  echo "inittab: askconsole改为respawn,开机自动进入控制台"
+fi
+
 z="luci-theme-argon,luci-app-argon-config,luci-theme-Butterfly,luci-theme-netgear,luci-theme-atmaterial, \
 luci-theme-rosy,luci-theme-darkmatter,luci-theme-infinityfreedom,luci-theme-design,luci-app-design-config, \
 luci-theme-bootstrap-mod,luci-theme-freifunk-generic,luci-theme-opentomato,luci-theme-kucat, \
@@ -300,16 +308,6 @@ fi
 # 更新golang和node版本
 gitsvn https://github.com/sbwml/packages_lang_golang ${HOME_PATH}/feeds/packages/lang/golang
 gitsvn https://github.com/sbwml/feeds_packages_lang_node-prebuilt ${HOME_PATH}/feeds/packages/lang/node
-
-# PassWall core components: override stale coolsnowwolf/packages versions with official active builds
-# (resolves xray-core/sing-box/chinadns-ng etc. being outdated in the LEDE packages fork)
-PWPKG="https://github.com/Openwrt-Passwall/openwrt-passwall-packages/tree/main"
-for pw in xray-core sing-box chinadns-ng ipt2socks geoview microsocks dns2socks tcping; do
-  if [ -d "${HOME_PATH}/feeds/packages/net/${pw}" ]; then
-    rm -rf "${HOME_PATH}/feeds/packages/net/${pw}"
-    gitsvn "${PWPKG}/${pw}" "${HOME_PATH}/feeds/packages/net/${pw}"
-  fi
-done
 
 # store插件依赖
 if [[ -d "${HOME_PATH}/feeds/danshui/relevance/nas-packages/network/services" ]] && [[ ! -d "${HOME_PATH}//package/network/services/ddnsto" ]]; then
@@ -481,6 +479,16 @@ fi
 
 # 更新和安装feeds
 ./scripts/feeds install -a
+
+# PassWall core components: override stale coolsnowwolf/packages versions with official active builds
+# Must run AFTER the last feeds update/install so it is not overwritten by feeds sync
+PWPKG="https://github.com/Openwrt-Passwall/openwrt-passwall-packages/tree/main"
+for pw in xray-core sing-box chinadns-ng ipt2socks geoview microsocks dns2socks tcping; do
+  if [ -d "${HOME_PATH}/feeds/packages/net/${pw}" ]; then
+    rm -rf "${HOME_PATH}/feeds/packages/net/${pw}"
+    gitsvn "${PWPKG}/${pw}" "${HOME_PATH}/feeds/packages/net/${pw}"
+  fi
+done
 
 # 使用自定义配置文件
 [[ -f "$MYCONFIG_FILE" ]] && cp -Rf $MYCONFIG_FILE .config
