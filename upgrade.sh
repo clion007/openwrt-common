@@ -114,6 +114,7 @@ API_PATH="${API_PATH}"
 Github_API1="${Github_API1}"
 Github_API2="${Github_API2}"
 Github_Release="${Github_Release}"
+RELEASE_DOWNLOAD="${Release_download1}"
 Release_download1="${Release_download1}"
 Release_download2="${Release_download2}"
 EOF
