@@ -2,7 +2,7 @@
 # https://github.com/Hyy2001X/AutoBuild-Actions
 # AutoBuild Module by Hyy2001
 # AutoBuild Functions
-
+AUTOUPDATE_VERSION=8.0
 
 function Diy_Part1() {
 	find . -type d -name 'luci-app-autoupdate' | xargs -i rm -rf {}
@@ -19,14 +19,14 @@ function Diy_Part1() {
 
 function Diy_Part2() {
 	export UPDATE_TAG="Update-${TARGET_BOARD}"
-	export In_Firmware_Info="${HOME_PATH}/package/base-files/files/etc/openwrt_update"
-	export Github_API1="https://ghfast.top/${GITHUB_LINK}/releases/download/${UPDATE_TAG}/zzz_api"
-	export Github_API2="${GITHUB_LINK}/releases/download/${UPDATE_TAG}/zzz_api"
-	export API_PATH="/tmp/Downloads/zzz_api"
-	export Release_download1="${GITHUB_LINK}/releases/download/${UPDATE_TAG}"
-	export Release_download2="https://ghfast.top/${GITHUB_LINK}/releases/download/${UPDATE_TAG}"
-	export Github_Release="${GITHUB_LINK}/releases/tag/${UPDATE_TAG}"
-        cp -f ${LINSHI_COMMON}/autoupdate/replace replace
+	export FILESETC_UPDATE="${HOME_PATH}/package/base-files/files/etc/openwrt_update"
+	export GITHUB_PROXY="https://ghfast.top"
+	export RELEASE_DOWNLOAD="\$GITHUB_LINK/releases/download/${UPDATE_TAG}"
+	export GITHUB_RELEASE="${GITHUB_LINK}/releases/tag/${UPDATE_TAG}"
+        if [[ ! -f "$LINSHI_COMMON/autoupdate/replace" ]]; then
+		echo -e "\n\033[0;31m缺少autoupdate/replace文件\033[0m"
+   		exit 1
+  	fi
 	if [[ "${TARGET_PROFILE}" == *"k3"* ]]; then
 		export TARGET_PROFILE_ER="phicomm-k3"
 	elif [[ "${TARGET_PROFILE}" == *"k2p"* ]]; then
@@ -42,142 +42,151 @@ function Diy_Part2() {
 	fi
 	
 	case "${TARGET_BOARD}" in
-	ramips | reltek | ath* | ipq* | bcm47xx | bmips | kirkwood | mediatek)
-		export Firmware_SFX=".bin"
-		export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
+	ramips | reltek | ath* | ipq* | bmips | kirkwood | mediatek |bcm4908 |gemini |lantiq |layerscape |qualcommax |qualcommbe |siflower |silicon)
+		export FIRMWARE_SUFFIX=".bin"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
+	;;
+ 	bcm47xx)
+          	if echo "$TARGET_PROFILE" | grep -Eq 'asus'; then
+			export FIRMWARE_SUFFIX=".trx"
+             	elif echo "$TARGET_PROFILE" | grep -Eq 'netgear'; then
+			export FIRMWARE_SUFFIX=".chk"
+		else
+			export FIRMWARE_SUFFIX=".bin"
+		fi
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	x86)
-		export Firmware_SFX=".img.gz"
-		export AutoBuild_Uefi="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-uefi"
-		export AutoBuild_Legacy="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-legacy"
+		export FIRMWARE_SUFFIX=".img.gz"
+		export AUTOBUILD_FIRMWARE_UEFI="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
-	rockchip | bcm27xx | mxs | sunxi | zynq)
-		export Firmware_SFX=".img.gz"
-		export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
+	rockchip | bcm27xx | mxs | sunxi | zynq |loongarch64 |omap |sifiveu |tegra |amlogic)
+		export FIRMWARE_SUFFIX=".img.gz"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	mvebu)
-		case "${TARGET_SUBTARGET}" in
-		cortexa53 | cortexa72)
-			export Firmware_SFX=".img.gz"
-			export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
-		;;
-		esac
+		export FIRMWARE_SUFFIX=".img.gz"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	bcm53xx)
-		export Firmware_SFX=".trx"
-		export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
+ 		if echo "$TARGET_PROFILE" | grep -Eq 'mr32|tplink|dlink'; then
+			export FIRMWARE_SUFFIX=".bin"
+     		elif echo "$TARGET_PROFILE" | grep -Eq 'luxul'; then
+			export FIRMWARE_SUFFIX=".lxl"
+        	elif echo "$TARGET_PROFILE" | grep -Eq 'netgear'; then
+			export FIRMWARE_SUFFIX=".chk"
+		else
+			export FIRMWARE_SUFFIX=".trx"
+		fi
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	octeon | oxnas | pistachio)
-		export Firmware_SFX=".tar"
-		export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
+		export FIRMWARE_SUFFIX=".tar"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	*)
-		export Firmware_SFX=".bin"
-		export AutoBuild_Firmware="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}-sysupgrade"
+		export FIRMWARE_SUFFIX=".bin"
+		export AUTOBUILD_FIRMWARE="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
 	;;
 	esac
 	
-	if [ -f "${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate" ]; then
-		export AutoUpdate_Version=$(grep -Eo "Version=V[0-9.]+" "${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate" |grep -Eo [0-9.]+)
-	fi
-	
-	export Openwrt_Version="${SOURCE}-${TARGET_PROFILE_ER}-${Upgrade_Date}"
-	export LOCAL_FIRMW="${LUCI_EDITION}-${SOURCE}"
-	export CLOUD_CHAZHAO="${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}"
-	
-	if [ "${TARGET_BOARD}" = "x86" ]; then
-		echo "AutoBuild_Uefi=${AutoBuild_Uefi}" >> ${GITHUB_ENV}
-		echo "AutoBuild_Legacy=${AutoBuild_Legacy}" >> ${GITHUB_ENV}
+	export FIRMWARE_VERSION="${SOURCE}-${TARGET_PROFILE_ER}-${UPGRADE_DATE}"
+
+	if [[ "${TARGET_BOARD}" == "x86" ]]; then
+   		BOOT_TYPE="legacy"
+ 		echo "AUTOBUILD_FIRMWARE_UEFI=${AUTOBUILD_FIRMWARE_UEFI}-uefi" >> ${GITHUB_ENV}
+		echo "AUTOBUILD_FIRMWARE=${AUTOBUILD_FIRMWARE}-${BOOT_TYPE}" >> ${GITHUB_ENV}
+	elif [[ "${FIRMWARE_SUFFIX}" == ".img.gz" ]]; then
+   		BOOT_TYPE="legacy"
+		echo "AUTOBUILD_FIRMWARE=${AUTOBUILD_FIRMWARE}-${BOOT_TYPE}" >> ${GITHUB_ENV}
 	else
-		echo "AutoBuild_Firmware=${AutoBuild_Firmware}" >> ${GITHUB_ENV}
+ 		BOOT_TYPE="sysupgrade"
+		echo "AUTOBUILD_FIRMWARE=${AUTOBUILD_FIRMWARE}-${BOOT_TYPE}" >> ${GITHUB_ENV}
 	fi
-	
-	echo "UPDATE_TAG=${UPDATE_TAG}" >> ${GITHUB_ENV}
-	echo "Firmware_SFX=${Firmware_SFX}" >> ${GITHUB_ENV}
-	echo "AutoUpdate_Version=${AutoUpdate_Version}" >> ${GITHUB_ENV}
-	echo "Openwrt_Version=${Openwrt_Version}" >> ${GITHUB_ENV}
-	echo "Github_Release=${Github_Release}" >> ${GITHUB_ENV}
+
+ 	echo "UPDATE_TAG=${UPDATE_TAG}" >> ${GITHUB_ENV}
+	echo "FIRMWARE_SUFFIX=${FIRMWARE_SUFFIX}" >> ${GITHUB_ENV}
+	echo "AUTOUPDATE_VERSION=${AUTOUPDATE_VERSION}" >> ${GITHUB_ENV}
+	echo "FIRMWARE_VERSION=${FIRMWARE_VERSION}" >> ${GITHUB_ENV}
+	echo "GITHUB_RELEASE=${GITHUB_RELEASE}" >> ${GITHUB_ENV}
 
 
-cat >"${In_Firmware_Info}" <<-EOF
-GITHUB_LINK=${GITHUB_LINK}
-CURRENT_Version=${Openwrt_Version}
-SOURCE="${SOURCE}"
-LUCI_EDITION="${LUCI_EDITION}"
-DEFAULT_Device="${TARGET_PROFILE_ER}"
-Firmware_SFX="${Firmware_SFX}"
-TARGET_BOARD="${TARGET_BOARD}"
-CLOUD_CHAZHAO="${CLOUD_CHAZHAO}"
-Download_Path="/tmp/Downloads"
-Version="${AutoUpdate_Version}"
-API_PATH="${API_PATH}"
-Github_API1="${Github_API1}"
-Github_API2="${Github_API2}"
-Github_Release="${Github_Release}"
-RELEASE_DOWNLOAD="${Release_download1}"
-Release_download1="${Release_download1}"
-Release_download2="${Release_download2}"
-EOF
+	# 写入openwrt_update文件
+	install -m 0755 /dev/null "${FILESETC_UPDATE}"
+	echo "GITHUB_LINK=\"${GITHUB_LINK}\"" >> ${FILESETC_UPDATE}
+ 	echo "FIRMWARE_VERSION=\"${FIRMWARE_VERSION}\"" >> ${FILESETC_UPDATE}
+ 	echo "LUCI_EDITION=\"${LUCI_EDITION}\"" >> ${FILESETC_UPDATE}
+ 	echo "SOURCE=\"${SOURCE}\"" >> ${FILESETC_UPDATE}
+   	echo "DEVICE_MODEL=\"${TARGET_PROFILE_ER}\"" >> ${FILESETC_UPDATE}
+ 	echo "FIRMWARE_SUFFIX=\"${FIRMWARE_SUFFIX}\"" >> ${FILESETC_UPDATE}
+ 	echo "TARGET_BOARD=\"${TARGET_BOARD}\"" >> ${FILESETC_UPDATE}
+ 	echo "GITHUB_PROXY=\"${GITHUB_PROXY}\"" >> ${FILESETC_UPDATE}
+ 	echo "RELEASE_DOWNLOAD=\"${RELEASE_DOWNLOAD}\"" >> ${FILESETC_UPDATE}
+	cat "$LINSHI_COMMON/autoupdate/replace" >> ${FILESETC_UPDATE}
 
-	cat replace >> ${In_Firmware_Info}
-	sudo chmod +x ${In_Firmware_Info}
+ 	# 写入del_assets文件
+	install -m 0755 /dev/null "${GITHUB_WORKSPACE}/del_assets"
+  	echo "UPDATE_TAG=\"${UPDATE_TAG}\"" >> "${GITHUB_WORKSPACE}/del_assets"
+  	echo "BOOT_TYPE=\"${BOOT_TYPE}\"" >> "${GITHUB_WORKSPACE}/del_assets"
+	echo "FIRMWARE_SUFFIX=\"${FIRMWARE_SUFFIX}\"" >> "${GITHUB_WORKSPACE}/del_assets"
+ 	echo "FIRMWARE_PROFILEER=\"${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}\"" >> "${GITHUB_WORKSPACE}/del_assets"
 }
 
 function Diy_Part3() {
 	BIN_PATH="${HOME_PATH}/bin/Firmware"
 	echo "BIN_PATH=${BIN_PATH}" >> ${GITHUB_ENV}
- 	[[ -f "${GITHUB_ENV}" ]] && source ${GITHUB_ENV}
 	[[ ! -d "${BIN_PATH}" ]] && mkdir -p "${BIN_PATH}" || rm -rf "${BIN_PATH}"/*
 	
 	cd "${FIRMWARE_PATH}"
-	if [[ `ls -1 |grep -c ".img"` -ge '1' ]] && [[ `ls -1 |grep -c ".img.gz"` -eq '0' ]]; then
+ 	if [[ -n "$(ls -1 | grep -Eo '.img')" ]] && [[ -z "$(ls -1 | grep -Eo '.img.gz')" ]]; then
 		gzip -f9n *.img
 	fi
 	
 	case "${TARGET_BOARD}" in
 	x86)
-		if [[ `ls -1 | grep -c "efi"` -ge '1' ]]; then
-			EFI_ZHONGZHUAN="$(ls -1 |grep -Eo ".*squashfs.*efi.*img.gz")"
+		if [[ -n "$(ls -1 | grep -E 'efi')" ]]; then
+			EFI_ZHONGZHUAN="$(ls -1 |grep -Eo ".*squashfs.*efi.*img.gz" |grep -v ".vm\|.vb\|.vh\|.qco\|ext4\|root\|factory\|kernel")"
 			if [[ -f "${EFI_ZHONGZHUAN}" ]]; then
 		  		EFIMD5="$(md5sum ${EFI_ZHONGZHUAN} |cut -c1-3)$(sha256sum ${EFI_ZHONGZHUAN} |cut -c1-3)"
-		  		cp -Rf "${EFI_ZHONGZHUAN}" "${BIN_PATH}/${AutoBuild_Uefi}-${EFIMD5}${Firmware_SFX}"
+		  		cp -Rf "${EFI_ZHONGZHUAN}" "${BIN_PATH}/${AUTOBUILD_FIRMWARE_UEFI}-${EFIMD5}${FIRMWARE_SUFFIX}"
+      				echo "BOOT_UEFI=\"uefi\"" >> "${GITHUB_WORKSPACE}/del_assets"
 			else
-				echo "没找到在线升级可用的${Firmware_SFX}格式固件"
-    				echo "没找到在线升级可用的固件" >${BIN_PATH}/upgrade.txt
+				echo "没找到在线升级可用的efi${FIRMWARE_SUFFIX}格式固件"
 			fi
-		else
-			echo "没有uefi格式固件"
 		fi
-		
-		if [[ `ls -1 | grep -c "squashfs"` -ge '1' ]]; then
-			LEGA_ZHONGZHUAN="$(ls -1 |grep -Eo ".*squashfs.*img.gz" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|root")"
-			if [[ -f "${LEGA_ZHONGZHUAN}" ]]; then
-				LEGAMD5="$(md5sum ${LEGA_ZHONGZHUAN} |cut -c1-3)$(sha256sum ${LEGA_ZHONGZHUAN} |cut -c1-3)"
-				cp -Rf "${LEGA_ZHONGZHUAN}" "${BIN_PATH}/${AutoBuild_Legacy}-${LEGAMD5}${Firmware_SFX}"
+  		
+  		if [[ -n "$(ls -1 | grep -E 'squashfs')" ]]; then
+			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*squashfs.*img.gz" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|ext4\|root\|factory\|kernel")"
+			if [[ -f "${UP_ZHONGZHUAN}" ]]; then
+   				MD5="$(md5sum ${UP_ZHONGZHUAN} | cut -c1-3)$(sha256sum ${UP_ZHONGZHUAN} | cut -c1-3)"
+				cp -Rf "${UP_ZHONGZHUAN}" "${BIN_PATH}/${AUTOBUILD_FIRMWARE}-${MD5}${FIRMWARE_SUFFIX}"
 			else
-				echo "没找到在线升级可用的${Firmware_SFX}格式固件"
-    				echo "没找到在线升级可用的固件" >${BIN_PATH}/upgrade.txt
+				echo "没找到在线升级可用的${FIRMWARE_SUFFIX}格式固件"
 			fi
 		else
 			echo "没有squashfs格式固件"
 		fi
 	;;
 	*)
-		if [[ `ls -1 | grep -c "sysupgrade"` -ge '1' ]]; then
-			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*sysupgrade.*${Firmware_SFX}" |grep -v "rootfs\|ext4\|factory\|kernel")"
-		elif [[ `ls -1 | grep -c "squashfs"` -ge '1' ]]; then
-			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*squashfs.*${Firmware_SFX}" |grep -v "rootfs\|ext4\|factory\|kernel")"
+  		if [[ -n "$(ls -1 | grep -E 'sysupgrade')" ]]; then
+			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*sysupgrade.*${FIRMWARE_SUFFIX}" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|ext4\|root\|factory\|kernel")"
+		elif [[ -n "$(ls -1 | grep -E 'squashfs')" ]]; then
+			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*squashfs.*${FIRMWARE_SUFFIX}" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|ext4\|root\|factory\|kernel")"
+   		elif [[ -n "$(ls -1 | grep -E 'combined')" ]]; then
+			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*combined.*${FIRMWARE_SUFFIX}" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|ext4\|root\|factory\|kernel")"
+      		elif [[ -n "$(ls -1 | grep -E 'sdcard')" ]]; then
+			UP_ZHONGZHUAN="$(ls -1 |grep -Eo ".*${TARGET_PROFILE}.*sdcard.*${FIRMWARE_SUFFIX}" |grep -v ".vm\|.vb\|.vh\|.qco\|efi\|ext4\|root\|factory\|kernel")"
    		else
-     			UP_ZHONGZHUAN="NO"
+     			echo "没找到在线升级可用的${FIRMWARE_SUFFIX}格式固件，或者没适配该机型"
 		fi
-		if [[ "${UP_ZHONGZHUAN}" == "NO" ]]; then
-			echo "没找到在线升级可用的${Firmware_SFX}格式固件，或者没适配该机型"
-   			echo "没找到在线升级可用的固件" >${BIN_PATH}/upgrade.txt
-		else
+		if [[ -f "${UP_ZHONGZHUAN}" ]]; then
    			MD5="$(md5sum ${UP_ZHONGZHUAN} | cut -c1-3)$(sha256sum ${UP_ZHONGZHUAN} | cut -c1-3)"
-			cp -Rf "${UP_ZHONGZHUAN}" "${BIN_PATH}/${AutoBuild_Firmware}-${MD5}${Firmware_SFX}"
+			cp -Rf "${UP_ZHONGZHUAN}" "${BIN_PATH}/${AUTOBUILD_FIRMWARE}-${MD5}${FIRMWARE_SUFFIX}"
 		fi
 	;;
 	esac
+ 	echo -e "\n\033[0;32m远程更新固件\033[0m"
+ 	ls -1 $BIN_PATH
 	cd ${HOME_PATH}
 }

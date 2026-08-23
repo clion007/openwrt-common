@@ -81,7 +81,10 @@ MT798X)
     export REPO_URL="https://github.com/padavanonly/immortalwrt-mt798x-24.10"
     export SOURCE="Mt798x"
     export SOURCE_OWNER="padavanonly"
-    if [[ "${REPO_BRANCH}" == "2410" ]]; then
+    if [[ "${REPO_BRANCH}" == "openwrt-24.10-6.6" ]]; then
+      export LUCI_EDITION="24.10"
+    elif [[ "${REPO_BRANCH}" == "2410" ]]; then
+      export REPO_BRANCH="openwrt-24.10-6.6"
       export LUCI_EDITION="24.10"
     else
       export LUCI_EDITION="$(echo "${REPO_BRANCH}" |sed 's/openwrt-//g')"
@@ -91,11 +94,7 @@ MT798X)
   fi
 ;;
 *)
-  if [[ -n "${BENDI_VERSION}" ]]; then
-    TIME r "因刚同步上游文件,请设置好[operates]文件夹内的配置后，再次使用命令编译"
-  else
-    TIME r "不支持${SOURCE_CODE}此源码，当前只支持COOLSNOWWOLF、LIENOL、IMMORTALWRT、XWRT、OFFICIAL"
-  fi
+  TIME r "不支持${SOURCE_CODE}此源码，当前只支持COOLSNOWWOLF、LIENOL、IMMORTALWRT、XWRT、OFFICIAL"
   exit 1
 ;;
 esac
@@ -217,9 +216,6 @@ if [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)" 
   if ! grep -q "dnsmasq-full" "${HOME_PATH}/include/target.mk"; then
     sed -i 's?dnsmasq?dnsmasq-full?g' "${HOME_PATH}/include/target.mk"
   fi
-  if ! grep -q "ca-bundle" "${HOME_PATH}/include/target.mk"; then
-    sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=ca-bundle ?g' "${HOME_PATH}/include/target.mk"
-  fi
   if ! grep -q "default-settings" "${HOME_PATH}/include/target.mk"; then
     sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings luci luci-compat luci-lib-base luci-lib-ipkg ?g' "${HOME_PATH}/include/target.mk"
   fi
@@ -231,16 +227,9 @@ elif [[ -z "$(find "$HOME_PATH/package" -type d -name "default-settings" -print)
   if ! grep -q "dnsmasq-full" "${HOME_PATH}/include/target.mk"; then
     sed -i 's?dnsmasq?dnsmasq-full?g' "${HOME_PATH}/include/target.mk"
   fi
-  if ! grep -q "ca-bundle" "${HOME_PATH}/include/target.mk"; then
-    sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=ca-bundle ?g' "${HOME_PATH}/include/target.mk"
-  fi
   if ! grep -q "default-settings" "${HOME_PATH}/include/target.mk"; then
-    sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings luci luci-compat luci-lib-fs luci-lib-ipkg ?g' "${HOME_PATH}/include/target.mk"
+    sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings?g' "${HOME_PATH}/include/target.mk"
   fi
-fi
-
-if ! grep -q "default-settings" "${HOME_PATH}/include/target.mk"; then
-  sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=default-settings luci ?g' "${HOME_PATH}/include/target.mk"
 fi
 
 ZZZ_PATH="$(find "$HOME_PATH/package" -name "*-default-settings" -not -path "A/exclude_dir/*" -print)"
@@ -264,12 +253,10 @@ cd ${HOME_PATH}
 # 更新feeds后再次修改补充
 cd ${HOME_PATH}
 
-# 开机直接进入控制台(login shell),不要求按回车:askconsole -> respawn
-INITTAB_PATH="${HOME_PATH}/package/base-files/files/etc/inittab"
-if [ -f "${INITTAB_PATH}" ]; then
-  sed -i 's/::askconsole:/::respawn:/g' "${INITTAB_PATH}"
-  echo "inittab: askconsole改为respawn,开机自动进入控制台"
-fi
+# 开机直接进入控制台,免按回车: 把各平台 base-files inittab 的 askfirst 改为 respawn
+# respawn 走 procd rcrespawn 直接拉起 login.sh,不经 /sbin/askfirst(即免按回车)
+find "${HOME_PATH}/target/linux" -path '*/base-files/etc/inittab' 2>/dev/null \
+  -exec sed -i 's/::askfirst:/::respawn:/g' {} +
 
 z="luci-theme-argon,luci-app-argon-config,luci-theme-Butterfly,luci-theme-netgear,luci-theme-atmaterial, \
 luci-theme-rosy,luci-theme-darkmatter,luci-theme-infinityfreedom,luci-theme-design,luci-app-design-config, \
@@ -277,7 +264,7 @@ luci-theme-bootstrap-mod,luci-theme-freifunk-generic,luci-theme-opentomato,luci-
 luci-app-eqos,adguardhome,luci-app-adguardhome,mosdns,luci-app-mosdns,luci-app-openclash, \
 luci-app-gost,gost,luci-app-smartdns,smartdns,luci-app-wizard,luci-app-msd_lite,msd_lite, \
 luci-app-ssr-plus,luci-app-passwall,luci-app-passwall2,shadowsocksr-libev,v2dat,v2ray-geodata, \
-luci-app-wechatpush,v2ray-core,v2ray-plugin,v2raya,xray-core,xray-plugin,luci-app-alist,alist"
+luci-app-wechatpush,v2ray-core,v2ray-plugin,v2raya,xray-plugin,luci-app-alist,alist"
 t=(${z//,/ })
 for x in "${t[@]}"; do
     find ./feeds ./package \
@@ -291,6 +278,8 @@ done
 
 if [[ ! "${REPO_BRANCH}" =~ ^(main|master|(openwrt-)?(24\.10))$ ]]; then
   rm -rf ${HOME_PATH}/feeds/danshui/luci-app-fancontrol
+  rm -rf ${HOME_PATH}/feeds/danshui/luci-app-qmodem
+  rm -rf ${HOME_PATH}/feeds/danshui/relevance/quectel_cm-5G
 fi
 
 if [[ "${REPO_BRANCH}" =~ ^(2410|(openwrt-)?(24\.10))$ ]]; then
@@ -303,7 +292,6 @@ if [[ ! -d "${HOME_PATH}/package/network/config/firewall4" ]]; then
     rm -rf ${HOME_PATH}/feeds/danshui/luci-app-nikki
     rm -rf ${HOME_PATH}/feeds/danshui/luci-app-homeproxy
 fi
-
 
 # 更新golang和node版本
 gitsvn https://github.com/sbwml/packages_lang_golang ${HOME_PATH}/feeds/packages/lang/golang
@@ -321,7 +309,7 @@ fi
 bash ${LINSHI_COMMON}/Share/tproxy/nft_tproxy.sh
 
 if [[ ! -d "${HOME_PATH}/feeds/packages/lang/rust" ]]; then
-    gitsvn https://github.com/openwrt/packages/tree/openwrt-23.05/lang/rust ${HOME_PATH}/feeds/packages/lang/rust
+    gitsvn https://github.com/openwrt/packages/tree/openwrt-24.10/lang/rust ${HOME_PATH}/feeds/packages/lang/rust
 fi
 
 if [[ ! -d "${HOME_PATH}/feeds/packages/devel/packr" ]]; then
@@ -362,19 +350,23 @@ elif [[ -f "${HOME_PATH}/target/linux/armvirt/Makefile" ]]; then
   sed -i "s?FEATURES+=.*?FEATURES+=targz?g" ${HOME_PATH}/target/linux/armvirt/Makefile
 fi
 
-# 给固件保留配置更新固件的保留项目
-cat >> "${KEEPD_PATH}" <<-EOF
-/etc/config/AdGuardHome.yaml
-/www/luci-static/argon/background
-/etc/smartdns/custom.conf
- /etc/dnsmasq.d/
- /usr/share/adss/
- /etc/init.d/adss
- /etc/rc.d/S90adss
- /usr/bin/chinadns-ng
- /etc/puship/
- /etc/hotplug.d/iface/99-puship
+# 精简上游保留名单:仅保留账号体系 + 用户常用文件,其余系统模板文件(profile/inittab/shinit/sysctl.conf)随固件更新
+cat > "${KEEPD_PATH}" <<-EOF
+/etc/hosts
+/etc/group
+/etc/passwd
+/etc/shadow
+/etc/shells
+/etc/rc.local
 EOF
+
+# 排除"非后台设置"的备份项(导出备份与在线更新两条路径都生效):
+# 仅从 keep.d 文件与各包 Makefile 的 conffiles 块中删掉这些路径,使其不被 sysupgrade -b 纳入
+for _nokeep in /etc/opkg/keys /etc/luci-uploads; do
+  find "${HOME_PATH}/package" "${HOME_PATH}/feeds" -type f \( -path '*/keep.d/*' -o -name 'Makefile' \) 2>/dev/null \
+    | xargs -r grep -lF "${_nokeep}" 2>/dev/null \
+    | xargs -r sed -i "\|${_nokeep}|d"
+done
 }
 
 
@@ -486,8 +478,8 @@ PWPKG="https://github.com/Openwrt-Passwall/openwrt-passwall-packages/tree/main"
 for pw in xray-core sing-box chinadns-ng ipt2socks geoview microsocks dns2socks tcping; do
   if [ -d "${HOME_PATH}/feeds/packages/net/${pw}" ]; then
     rm -rf "${HOME_PATH}/feeds/packages/net/${pw}"
-    gitsvn "${PWPKG}/${pw}" "${HOME_PATH}/feeds/packages/net/${pw}"
   fi
+  gitsvn "${PWPKG}/${pw}" "${HOME_PATH}/feeds/packages/net/${pw}"
 done
 
 # 使用自定义配置文件
@@ -548,7 +540,6 @@ fi
 [[ -d "${HOME_PATH}/files" ]] && sudo chmod +x ${HOME_PATH}/files
 rm -rf ${HOME_PATH}/files/{LICENSE,README}
 }
-
 
 function Diy_definition() {
 cd ${HOME_PATH}
@@ -706,10 +697,15 @@ if [[ "${Disable_Bridge}" == "1" ]]; then
    sed -i "$lan\delete network.lan.type" "${GENE_PATH}"
    echo "去掉桥接设置完成"
 else
-   echo "不进行,去掉桥接设"
+   echo "不去掉桥接设置"
 fi
 
-# TTYD auto-login is now handled at runtime in 99-first-run (config_generate has no ttyd section)
+if [[ "${Ttyd_account_free_login}" == "1" ]]; then
+   sed -i "$lan\set ttyd.@ttyd[0].command='/bin/login -f root'" "${GENE_PATH}"
+   echo "TTYD免账户登录完成"
+else
+   echo "不进行,TTYD免账户登录"
+fi
 
 if [[ "${Password_free_login}" == "1" ]]; then
    sed -i '/CYXluq4wUazHjmCDBCqXF/d' "${ZZZ_PATH}"
@@ -779,11 +775,6 @@ CONFIG_PACKAGE_kmod-fuse=y
 ' >> ${HOME_PATH}/.config
 mkdir -p ${HOME_PATH}/files/etc/hotplug.d/block
 cp -f ${LINSHI_COMMON}/Share/block/10-mount ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
-chmod +x ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
-  if [[ "${SOURCE}" == "Lienol" ]] && [[ "${REPO_BRANCH}" == "19.07" ]]; then
-    sed -i '/CONFIG_PACKAGE_ntfs-3g=y/d' "${HOME_PATH}/.config"
-    sed -i '/CONFIG_PACKAGE_NTFS-3G_HAS_PROBE=y/d' "${HOME_PATH}/.config"
-  fi
 fi
 
 if [[ "${Enable_IPV6_function}" == "1" ]]; then
@@ -1283,13 +1274,15 @@ if [[ "${REPO_BRANCH}" == *"18.06"* ]] || [[ "${REPO_BRANCH}" == *"19.07"* ]] ||
   fi 
 fi
 
+! grep -q "CONFIG_PACKAGE_auto-scripts=y" "${HOME_PATH}/.config" && echo "CONFIG_PACKAGE_auto-scripts=y" >> "${HOME_PATH}/.config"
+
 if [[ `grep -c "CONFIG_TARGET_ROOTFS_EXT4FS=y" ${HOME_PATH}/.config` -eq '1' ]]; then
   PARTSIZE="$(grep -Eo "CONFIG_TARGET_ROOTFS_PARTSIZE=[0-9]+" ${HOME_PATH}/.config |cut -f2 -d=)"
   if [[ "${PARTSIZE}" -lt "950" ]];then
     sed -i '/CONFIG_TARGET_ROOTFS_PARTSIZE/d' ${HOME_PATH}/.config
     echo -e "\nCONFIG_TARGET_ROOTFS_PARTSIZE=950" >> ${HOME_PATH}/.config
-    TIME r "EXT4提示：请注意，您选择了ext4安装的固件格式,而检测到您的分配的固件系统分区过小"
-    TIME r "为避免编译出错,已自动帮您修改成950M"
+    TIME r "EXT4提示：分区大小${PARTSIZE}M小于推荐值950M"
+    TIME r "已自动调整为950M"
   fi
 fi
 
@@ -1486,6 +1479,12 @@ cd $HOME_PATH
 Diy_management
 Diy_definition
 Diy_prevent
+# 追加 diy-part.sh 声明的额外保留项(方式乙:KEEP_CONF_FILES 经 GITHUB_ENV 传入,空格分隔)
+if [[ -n "${KEEP_CONF_FILES}" ]]; then
+  for f in ${KEEP_CONF_FILES}; do
+    echo "${f}" >> "${KEEPD_PATH}"
+  done
+fi
 }
 
 case "$1" in
