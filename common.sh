@@ -104,8 +104,8 @@ export DELETE="${HOME_PATH}/package/base-files/files/etc/deletefile"
 export DEFAULT_PATH="${HOME_PATH}/package/auto-scripts/files/99-first-run"
 export KEEPD_PATH="${HOME_PATH}/package/base-files/files/lib/upgrade/keep.d/base-files-essential"
 export CLEAR_PATH="/tmp/Clear"
-export Upgrade_Date="`date -d "$(date +'%Y-%m-%d %H:%M:%S')" +%s`"
-export Gujian_Date="$(date +%m.%d)"
+export UPGRADE_DATE="`date -d "$(date +'%Y-%m-%d %H:%M:%S')" +%s`"
+export GUJIAN_DATE="$(date +%m.%d)"
 export LICENSES_DOC="${HOME_PATH}/LICENSES/doc"
 export CON_TENTCOM="$(echo "${REPO_URL}" |cut -d"/" -f4-5)"
 export RAW_WEB="https://raw.githubusercontent.com/${CON_TENTCOM}/${REPO_BRANCH}/feeds.conf.default"
@@ -124,8 +124,8 @@ echo "DELETE=${DELETE}" >> ${GITHUB_ENV}
 echo "DEFAULT_PATH=${DEFAULT_PATH}" >> ${GITHUB_ENV}
 echo "KEEPD_PATH=${KEEPD_PATH}" >> ${GITHUB_ENV}
 echo "CLEAR_PATH=${CLEAR_PATH}" >> ${GITHUB_ENV}
-echo "Upgrade_Date=${Upgrade_Date}" >> ${GITHUB_ENV}
-echo "Gujian_Date=$(date +%m.%d)" >> ${GITHUB_ENV}
+echo "UPGRADE_DATE=${UPGRADE_DATE}" >> ${GITHUB_ENV}
+echo "GUJIAN_DATE=$(date +%m.%d)" >> ${GITHUB_ENV}
 echo "LICENSES_DOC=${LICENSES_DOC}" >> ${GITHUB_ENV}
 
 # 启动编译时的变量文件
@@ -1336,7 +1336,7 @@ for X in $(cat ${CLEAR_PATH} |sed "s/.*${TARGET_BOARD}//g"); do
 done
 
 if [[ -z "$(ls -1 |grep -E 'armvirt')" ]] || [[ -z "$(ls -1 |grep -E 'armsr')" ]]; then
-  rename -v "s/^openwrt/${Gujian_Date}-${SOURCE}-${LUCI_EDITION}-${LINUX_KERNEL}/" *
+  rename -v "s/^openwrt/${GUJIAN_DATE}-${SOURCE}-${LUCI_EDITION}-${LINUX_KERNEL}/" *
 fi
 }
 
