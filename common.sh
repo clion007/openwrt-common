@@ -32,7 +32,7 @@ COOLSNOWWOLF)
   export REPO_URL="https://github.com/coolsnowwolf/lede"
   export SOURCE="Lede"
   export SOURCE_OWNER="Lean"
-  export LUCI_EDITION="23.05"
+  export LUCI_EDITION="25.12"
   export DISTRIB_SOURCECODE="lede"
   export GENE_PATH="${HOME_PATH}/package/base-files/files/bin/config_generate"
 ;;
@@ -253,10 +253,10 @@ cd ${HOME_PATH}
 # 更新feeds后再次修改补充
 cd ${HOME_PATH}
 
-# 开机直接进入控制台,免按回车: 把各平台 base-files inittab 的 askfirst 改为 respawn
-# respawn 走 procd rcrespawn 直接拉起 login.sh,不经 /sbin/askfirst(即免按回车)
+# 开机直接进入控制台,免按回车: 把各平台 base-files inittab 的 askfirst 改为 respawnlate
+# respawnlate 等系统完成启动完成才进入控制台
 find "${HOME_PATH}/target/linux" -path '*/base-files/etc/inittab' 2>/dev/null \
-  -exec sed -i 's/::askfirst:/::respawn:/g' {} +
+  -exec sed -i 's/::askfirst:/::respawnlate:/g' {} +
 
 z="luci-theme-argon,luci-app-argon-config,luci-theme-Butterfly,luci-theme-netgear,luci-theme-atmaterial, \
 luci-theme-rosy,luci-theme-darkmatter,luci-theme-infinityfreedom,luci-theme-design,luci-app-design-config, \
