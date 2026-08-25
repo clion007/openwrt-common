@@ -20,9 +20,10 @@ function TIME() {
     y) export Color="\e[33m";;
     z) export Color="\e[35m";;
     l) export Color="\e[36m";;
+    w) export Color="\e[37m";;
   esac
 echo
-echo -e "\e[36m\e[0m${Color}${2}\e[0m"
+echo -e "${Color}${2}\e[0m"
 }
 
 function Diy_variable() {
