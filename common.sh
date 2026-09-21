@@ -833,6 +833,14 @@ elif [[ "${Enable_IPV4_function}" == "1" ]]; then
   " >> "${DEFAULT_PATH}"
 fi
 
+# Register router hostname into dnsmasq so LAN clients can resolve it (bare + .lan)
+# add_local_fqdn=2 -> dnsmasq --interface-name=<hostname>[.lan],<lan-if>,
+# resolving dynamically to all current IPs of the lan interface (IPv4 + IPv6)
+echo "
+  uci set dhcp.@dnsmasq[0].add_local_fqdn='2'
+  uci commit dhcp
+" >> "${DEFAULT_PATH}"
+
 if [[ "${Enable_IPV6_function}" == "1" ]]; then
 echo '
 CONFIG_PACKAGE_ipv6helper=y
