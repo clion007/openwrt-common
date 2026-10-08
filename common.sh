@@ -33,7 +33,7 @@ COOLSNOWWOLF)
   export REPO_URL="https://github.com/coolsnowwolf/lede"
   export SOURCE="Lede"
   export SOURCE_OWNER="Lean"
-  export LUCI_EDITION="$(date +%y.%m.%d)"
+  export LUCI_EDITION="25.12"
   export DISTRIB_SOURCECODE="lede"
   export GENE_PATH="${HOME_PATH}/package/base-files/files/bin/config_generate"
 ;;
@@ -1463,6 +1463,16 @@ fi
 function Diy_menu() {
 cd $HOME_PATH
 Diy_checkout
+# Override LUCI_EDITION with the actual SOURCE_DATE_EPOCH-based date
+# so it matches the @BUILD_DATE@ substitution in Lean's zzz-default-settings.
+# Only applies to Lean-style builds where DISTRIB_REVISION uses "R@BUILD_DATE@".
+if [[ "${SOURCE_CODE}" == "COOLSNOWWOLF" ]]; then
+  EPOCH="$(git -C "${HOME_PATH}" log -1 --format=%ct 2>/dev/null || echo "")"
+  if [[ -n "${EPOCH}" ]]; then
+    export LUCI_EDITION="$(date -d "@${EPOCH}" +%y.%m.%d 2>/dev/null || date +%y.%m.%d)"
+    echo "LUCI_EDITION=${LUCI_EDITION}" >> ${GITHUB_ENV}
+  fi
+fi
 Diy_${SOURCE_CODE}
 }
 
