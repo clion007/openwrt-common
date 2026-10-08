@@ -33,7 +33,7 @@ COOLSNOWWOLF)
   export REPO_URL="https://github.com/coolsnowwolf/lede"
   export SOURCE="Lede"
   export SOURCE_OWNER="Lean"
-  export LUCI_EDITION="25.12"
+  export LUCI_EDITION="$(date +%y.%m.%d)"
   export DISTRIB_SOURCECODE="lede"
   export GENE_PATH="${HOME_PATH}/package/base-files/files/bin/config_generate"
 ;;
@@ -237,8 +237,6 @@ ZZZ_PATH="$(find "$HOME_PATH/package" -name "*-default-settings" -not -path "A/e
 export ZZZ_PATH="${ZZZ_PATH}"
 if [[ -n "${ZZZ_PATH}" ]]; then
   echo "ZZZ_PATH=${ZZZ_PATH}" >> ${GITHUB_ENV}
-  export LUCI_EDITION="$(grep -oP "DISTRIB_REVISION='\K[^']+" ${ZZZ_PATH})"
-  echo "LUCI_EDITION=${LUCI_EDITION}" >> ${GITHUB_ENV}
   sed -i '/exit 0$/d' "${ZZZ_PATH}"
   sed -i "s?main.lang=.*?main.lang='zh_cn'?g" "${ZZZ_PATH}"
   grep -q "openwrt_banner" "${ZZZ_PATH}" && sed -i '/openwrt_banner/d' "${ZZZ_PATH}"
