@@ -1469,7 +1469,7 @@ Diy_checkout
 if [[ "${SOURCE_CODE}" == "COOLSNOWWOLF" ]]; then
   EPOCH="$(git -C "${HOME_PATH}" log -1 --format=%ct 2>/dev/null || echo "")"
   if [[ -n "${EPOCH}" ]]; then
-    export LUCI_EDITION="$(date -d "@${EPOCH}" +%y.%m.%d 2>/dev/null || date +%y.%m.%d)"
+    export LUCI_EDITION="R$(date -d "@${EPOCH}" +%y.%m.%d 2>/dev/null || date +%y.%m.%d)"
     echo "LUCI_EDITION=${LUCI_EDITION}" >> ${GITHUB_ENV}
   fi
 fi
