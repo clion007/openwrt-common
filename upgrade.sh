@@ -131,6 +131,7 @@ function Diy_Part2() {
   	echo "BOOT_TYPE=\"${BOOT_TYPE}\"" >> "${GITHUB_WORKSPACE}/del_assets"
 	echo "FIRMWARE_SUFFIX=\"${FIRMWARE_SUFFIX}\"" >> "${GITHUB_WORKSPACE}/del_assets"
  	echo "FIRMWARE_PROFILEER=\"${LUCI_EDITION}-${SOURCE}-${TARGET_PROFILE_ER}\"" >> "${GITHUB_WORKSPACE}/del_assets"
+ 	echo "SOURCE_PROFILE=\"${SOURCE}-${TARGET_PROFILE_ER}\"" >> "${GITHUB_WORKSPACE}/del_assets"
 }
 
 function Diy_Part3() {
