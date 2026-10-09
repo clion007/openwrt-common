@@ -10,6 +10,23 @@ function Diy_Part1() {
         	if ! grep -q "luci-app-autoupdate" "${HOME_PATH}/include/target.mk"; then
 			sed -i 's?DEFAULT_PACKAGES:=?DEFAULT_PACKAGES:=luci-app-autoupdate luci-app-ttyd ?g' ${HOME_PATH}/include/target.mk
 		fi
+		# Patch AutoUpdate: match firmware by source+model+boot_type only (not LUCI_EDITION),
+		# pick the newest asset by filename sort, and extract filename from URL tail.
+		# This keeps online detection working when LUCI_EDITION changes between builds.
+		AUTOUPDATE_SH="${HOME_PATH}/package/luci-app-autoupdate/root/usr/bin/AutoUpdate"
+		if [[ -f "${AUTOUPDATE_SH}" ]]; then
+			# 1) regex: drop the "${LUCI_EDITION}-" version lock
+			sed -i 's/\${LUCI_EDITION}-\${SOURCE}/-${SOURCE}/' "${AUTOUPDATE_SH}"
+			# 2) pick newest asset by filename sort instead of raw tail (assets array is upload-order asc)
+			sed -i "s#target_line=\$(grep -E \"\$regex\" \"\$tmpapi_version\" | tail -n 1)#target_line=\$(grep -E \"\$regex\" \"\$tmpapi_version\" | awk -F'/' '{print \$NF}' | sort | tail -n 1)#" "${AUTOUPDATE_SH}"
+			# 3) target_line is already a bare filename now, skip the LUCI_EDITION-based re-extraction
+			sed -i 's#REMOTE_FIRMWARE=\$(echo "$target_line" |grep -Eo "${LUCI_EDITION}.*${FIRMWARE_SUFFIX}")#REMOTE_FIRMWARE="${target_line}"#' "${AUTOUPDATE_SH}"
+			if grep -q 'REMOTE_FIRMWARE="${target_line}"' "${AUTOUPDATE_SH}" && grep -q "awk -F'/'" "${AUTOUPDATE_SH}" && ! grep -q 'LUCI_EDITION}-\${SOURCE}' "${AUTOUPDATE_SH}"; then
+				echo "AutoUpdate 在线检测逻辑补丁应用成功"
+			else
+				echo -e "\n\033[0;31mAutoUpdate 补丁应用失败,上游脚本可能已变更,请检查\033[0m"
+			fi
+		fi
 		echo "增加定时更新固件的插件下载完成"
 	else
 		echo "增加定时更新固件的插件下载失败"
